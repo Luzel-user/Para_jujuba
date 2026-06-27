@@ -694,7 +694,23 @@ function touchStart(e) {
 function touchMove(e) {
   e.preventDefault();
   const t = e.touches[0];
-  if (touchClone) { touchClone.style.left = (t.clientX - 40) + 'px'; touchClone.style.top = (t.clientY - 20) + 'px'; }
+  
+  if (touchClone) { 
+    touchClone.style.left = (t.clientX - 40) + 'px'; 
+    touchClone.style.top = (t.clientY - 20) + 'px'; 
+    
+    // --- LÓGICA DE ROLAGEM AUTOMÁTICA ---
+    const margem = 70; // Distância da borda da tela (em pixels) para começar a descer
+    const velocidade = 15; // Velocidade da rolagem
+    
+    if (t.clientY > window.innerHeight - margem) {
+      // Se o dedo chegar perto do fundo, rola a página para baixo
+      window.scrollBy(0, velocidade);
+    } else if (t.clientY < margem) {
+      // Se o dedo chegar perto do topo, rola a página para cima
+      window.scrollBy(0, -velocidade);
+    }
+  }
 }
 function touchEnd(e) {
   if (touchClone) { document.body.removeChild(touchClone); touchClone = null; }
