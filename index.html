@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uma mensagem especial para você 💌</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap');
+
+  :root {
+    --rose: #CC0000;
+    --rose-light: #FFCCCC;
+    --rose-pale: #FFF0F0;
+    --rose-dark: #880000;
+    --gold: #C9A84C;
+    --gold-light: #F5EDD4;
+    --cream: #FFFBF5;
+    --ink: #2A1A1F;
+    --muted: #7A5A62;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Lato', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── PETALS ── */
+  .petals-bg {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+  }
+  .petal {
+    position: absolute; top: -30px; font-size: 18px; opacity: 0;
+    animation: fallPetal linear infinite;
+  }
+  @keyframes fallPetal {
+    0%   { transform: translateY(0) rotate(0deg); opacity: 0.7; }
+    100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+  }
+
+  /* ── SCREENS ── */
+  .screen {
+    display: none; min-height: 100vh; position: relative; z-index: 1;
+    flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1rem;
+  }
+  .screen.active { display: flex; }
+
+  /* ── PROGRESS ── */
+  .progress-bar {
+    position: fixed; top: 0; left: 0; right: 0; height: 4px; background: var(--rose-light); z-index: 100;
+  }
+  .progress-fill {
+    height: 100%; background: linear-gradient(90deg, var(--rose), var(--gold));
+    transition: width 0.6s ease; width: 0%;
+  }
+  .step-label {
+    position: fixed; top: 12px; right: 1.5rem; font-size: 12px; color: var(--muted);
+    font-family: 'Lato', sans-serif; letter-spacing: 0.08em; z-index: 100;
+  }
+
+  /* ── QUIZ SCREENS ── */
+  .quiz-card {
+    background: #fff; border-radius: 24px;
+    border: 1.5px solid var(--rose-light);
+    padding: 2.5rem 2rem; max-width: 540px; width: 100%;
+    box-shadow: 0 8px 40px rgba(200,68,90,0.08);
+    animation: fadeUp 0.5s ease;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .quiz-eyebrow {
+    font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--rose); font-weight: 700; margin-bottom: 0.75rem;
+  }
+  .quiz-question {
+    font-family: 'Playfair Display', serif; font-size: 1.5rem;
+    line-height: 1.4; color: var(--ink); margin-bottom: 2rem;
+  }
+  .quiz-options { display: flex; flex-direction: column; gap: 0.75rem; }
+  .quiz-option {
+    padding: 0.9rem 1.25rem; border-radius: 14px;
+    border: 1.5px solid var(--rose-light); background: var(--rose-pale);
+    cursor: pointer; font-size: 1rem; color: var(--ink);
+    transition: all 0.2s; text-align: left; font-family: 'Lato', sans-serif;
+  }
+  .quiz-option:hover { border-color: var(--rose); background: var(--rose-light); }
+  .quiz-option.selected {
+    border-color: var(--rose); background: var(--rose);
+    color: #fff; transform: scale(1.02);
+  }
+  .quiz-option.correct { border-color: #2D9E6B; background: #2D9E6B; color: #fff; }
+  .quiz-option.wrong   { border-color: #C84444; background: #C84444; color: #fff; }
+
+  .quiz-feedback {
+    margin-top: 1.25rem; padding: 1rem 1.25rem; border-radius: 12px;
+    font-size: 0.95rem; line-height: 1.5; display: none;
+  }
+  .quiz-feedback.show { display: block; animation: fadeUp 0.3s ease; }
+  .quiz-feedback.ok  { background: #E8F7F0; color: #1A6B46; border: 1px solid #A8DFC4; }
+  .quiz-feedback.nok { background: #FDF0F0; color: #8B2020; border: 1px solid #F0BEBE; }
+
+  .next-btn {
+    margin-top: 1.5rem; padding: 0.85rem 2rem; border-radius: 50px;
+    background: var(--rose); color: #fff; border: none; cursor: pointer;
+    font-size: 1rem; font-family: 'Lato', sans-serif; font-weight: 700;
+    letter-spacing: 0.04em; display: none; transition: all 0.2s;
+  }
+  .next-btn:hover { background: var(--rose-dark); transform: translateY(-2px); }
+  .next-btn.show  { display: block; animation: fadeUp 0.3s ease; }
+
+  /* ── FILL IN BLANKS ── */
+  .fill-card {
+    background: #fff; border-radius: 24px;
+    border: 1.5px solid var(--rose-light);
+    padding: 2.5rem 2rem; max-width: 600px; width: 100%;
+    box-shadow: 0 8px 40px rgba(200,68,90,0.08);
+    animation: fadeUp 0.5s ease;
+  }
+  .fill-title {
+    font-family: 'Playfair Display', serif; font-size: 1.4rem;
+    color: var(--ink); margin-bottom: 0.5rem;
+  }
+  .fill-subtitle {
+    font-size: 0.9rem; color: var(--muted); margin-bottom: 1.75rem;
+  }
+  .word-bank {
+    display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.75rem;
+    padding: 1rem; background: var(--rose-pale); border-radius: 14px;
+    min-height: 60px;
+  }
+  .word-chip {
+    padding: 0.4rem 0.9rem; border-radius: 50px;
+    background: #fff; border: 1.5px solid var(--rose);
+    color: var(--rose); font-size: 0.9rem; font-weight: 700;
+    cursor: grab; user-select: none; transition: all 0.2s;
+    touch-action: none;
+  }
+  .word-chip:hover { background: var(--rose); color: #fff; }
+  .word-chip.dragging { opacity: 0.4; }
+
+  .fill-sentence {
+    font-family: 'Playfair Display', serif; font-size: 1.15rem;
+    line-height: 2.4; color: var(--ink);
+  }
+  .blank {
+    display: inline-block; min-width: 100px; padding: 0.2rem 0.5rem;
+    border-bottom: 2.5px solid var(--rose); border-radius: 4px 4px 0 0;
+    text-align: center; color: var(--rose); font-weight: 700;
+    background: var(--rose-pale); cursor: pointer; font-size: 0.95rem;
+    margin: 0 4px; vertical-align: middle; transition: all 0.2s;
+    min-height: 32px; position: relative;
+  }
+  .blank.filled { background: var(--rose-light); }
+  .blank.over   { background: var(--rose-light); border-color: var(--gold); }
+
+  .fill-result {
+    margin-top: 1.5rem; padding: 1.2rem 1.5rem; border-radius: 14px;
+    font-family: 'Playfair Display', serif; font-size: 1.1rem;
+    font-style: italic; line-height: 1.7; display: none;
+    background: var(--gold-light); border: 1.5px solid var(--gold);
+    color: var(--ink);
+  }
+  .fill-result.show { display: block; animation: fadeUp 0.5s ease; }
+
+  /* ── CROSSWORD ── */
+  .cross-card {
+    background: #fff; border-radius: 24px;
+    border: 1.5px solid var(--rose-light);
+    padding: 2rem 1.75rem; max-width: 620px; width: 100%;
+    box-shadow: 0 8px 40px rgba(200,68,90,0.08);
+    animation: fadeUp 0.5s ease;
+  }
+  .cross-title {
+    font-family: 'Playfair Display', serif; font-size: 1.4rem;
+    color: var(--ink); margin-bottom: 0.3rem;
+  }
+  .cross-subtitle { font-size: 0.9rem; color: var(--muted); margin-bottom: 1.5rem; }
+
+  .cross-grid-wrap { overflow-x: auto; margin-bottom: 1.5rem; }
+  .cross-grid {
+    display: grid; gap: 2px;
+    grid-template-columns: repeat(11, 36px); /* Aumentado para 11 colunas */
+    width: fit-content;
+  }
+  .cell {
+    width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; text-transform: uppercase; position: relative;
+  }
+  .cell.empty { background: transparent; }
+  .cell.letter {
+    background: #fff; border: 1.5px solid #e0c8cc; border-radius: 4px; cursor: pointer;
+  }
+  .cell.letter input {
+    width: 100%; height: 100%; border: none; background: transparent; text-align: center;
+    font-size: 14px; font-weight: 700; text-transform: uppercase; color: var(--ink);
+    font-family: 'Lato', sans-serif; cursor: pointer; outline: none;
+    caret-color: var(--rose);
+  }
+  .cell.letter:focus-within { border-color: var(--rose); background: var(--rose-pale); }
+  .cell.correct { background: #E8F7F0 !important; border-color: #2D9E6B !important; }
+  .cell.correct input { color: #1A6B46 !important; }
+  .cell-num {
+    position: absolute; top: 1px; left: 2px; font-size: 8px;
+    color: var(--rose); font-weight: 700; line-height: 1;
+  }
+
+  .clues-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .clue-group h4 {
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--rose); font-weight: 700; margin-bottom: 0.6rem;
+  }
+  .clue { font-size: 0.85rem; color: var(--ink); margin-bottom: 0.4rem; line-height: 1.4; }
+  .clue span { font-weight: 700; color: var(--muted); }
+
+  .check-cross-btn {
+    padding: 0.8rem 1.75rem; border-radius: 50px; background: var(--rose);
+    color: #fff; border: none; cursor: pointer; font-size: 0.95rem;
+    font-family: 'Lato', sans-serif; font-weight: 700; transition: all 0.2s;
+    margin-top: 1rem;
+  }
+  .check-cross-btn:hover { background: var(--rose-dark); transform: translateY(-2px); }
+
+  /* ── FINALE ── */
+  .finale-screen {
+    background: radial-gradient(ellipse at 50% 30%, #fff 0%, var(--rose-pale) 70%);
+    text-align: center; padding: 3rem 1.5rem;
+  }
+  .finale-text {
+    max-width: 560px; margin: 0 auto 3rem;
+  }
+  .finale-text h2 {
+    font-family: 'Playfair Display', serif; font-size: 2rem;
+    color: var(--ink); margin-bottom: 1.5rem; line-height: 1.3;
+    animation: fadeUp 0.6s ease;
+  }
+  .finale-text p {
+    font-size: 1.05rem; line-height: 1.9; color: var(--muted);
+    margin-bottom: 1rem; animation: fadeUp 0.8s ease;
+  }
+  .finale-text p strong { color: var(--rose); font-weight: 700; }
+
+  /* HEART BUTTON */
+  .heart-btn-wrap { display: flex; justify-content: center; margin-top: 2rem; }
+  .heart-btn {
+    width: 160px; height: 160px; background: none; border: none; cursor: pointer;
+    animation: heartbeat 1.4s ease-in-out infinite;
+    position: relative; display: flex; align-items: center; justify-content: center;
+  }
+  @keyframes heartbeat {
+    0%,100% { transform: scale(1); }
+    14%      { transform: scale(1.18); }
+    28%      { transform: scale(1); }
+    42%      { transform: scale(1.12); }
+    70%      { transform: scale(1); }
+  }
+  .heart-svg { width: 160px; height: 160px; filter: drop-shadow(0 6px 24px rgba(200,68,90,0.4)); }
+  .heart-btn span {
+    position: absolute; font-size: 12px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: #fff; pointer-events: none;
+  }
+  .heart-btn:hover .heart-svg { filter: drop-shadow(0 8px 32px rgba(200,68,90,0.6)); }
+
+  /* LOCKET REVEAL */
+  .locket-reveal { display: none; flex-direction: column; align-items: center; }
+  .locket-reveal.show { display: flex; animation: fadeUp 0.8s ease; }
+
+  .locket-gif-wrap {
+    width: 380px; height: 300px; border-radius: 16px;
+    border: 4px solid var(--gold); overflow: hidden;
+    box-shadow: 0 0 0 8px var(--gold-light), 0 12px 40px rgba(200,68,90,0.25);
+    margin-bottom: 2rem; position: relative; background: var(--rose-pale);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .locket-gif-wrap img {
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .locket-placeholder {
+    font-size: 5rem; line-height: 1;
+  }
+  .locket-msg {
+    font-family: 'Playfair Display', serif; font-style: italic;
+    font-size: 1.3rem; color: var(--rose); max-width: 400px;
+    text-align: center; line-height: 1.6;
+  }
+
+  /* CONFETTI */
+  .confetti-piece {
+    position: fixed; width: 8px; height: 8px; top: -10px;
+    border-radius: 50%; animation: confettiFall linear forwards;
+    z-index: 999; pointer-events: none;
+  }
+  @keyframes confettiFall {
+    0%   { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+    90%  { opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg) scale(0.5); opacity: 0; }
+  }
+
+  /* TITLE SCREEN */
+  .title-screen {
+    text-align: center; padding: 3rem 1.5rem;
+  }
+  .title-rose { font-size: 4rem; line-height: 1; margin-bottom: 1.5rem; animation: heartbeat 2s ease-in-out infinite; display: inline-block; }
+  .title-h1 {
+    font-family: 'Playfair Display', serif; font-size: 2.4rem;
+    color: var(--ink); margin-bottom: 1rem; line-height: 1.2;
+  }
+  .title-sub { font-size: 1.05rem; color: var(--muted); margin-bottom: 2.5rem; max-width: 380px; }
+  .start-btn {
+    padding: 1rem 2.5rem; border-radius: 50px; background: var(--rose);
+    color: #fff; border: none; cursor: pointer; font-size: 1.1rem;
+    font-family: 'Lato', sans-serif; font-weight: 700; letter-spacing: 0.05em;
+    box-shadow: 0 4px 24px rgba(200,68,90,0.3); transition: all 0.2s;
+  }
+  .start-btn:hover { background: var(--rose-dark); transform: translateY(-3px); box-shadow: 0 8px 32px rgba(200,68,90,0.4); }
+
+  @media (max-width: 480px) {
+    .cross-grid { grid-template-columns: repeat(11, 30px); } /* Aumentado para 11 colunas no mobile */
+    .cell { width: 30px; height: 30px; font-size: 12px; }
+    .cell input { font-size: 12px; }
+    .clues-wrap { grid-template-columns: 1fr; }
+    .quiz-question { font-size: 1.25rem; }
+    .title-h1 { font-size: 1.9rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Falling petals -->
+<div class="petals-bg" id="petals"></div>
+
+<!-- Progress bar -->
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+<div class="step-label" id="stepLabel"></div>
+
+<!-- ══════════════════════════════════════
+     TELA 0 — ABERTURA
+═══════════════════════════════════════ -->
+<div class="screen active title-screen" id="screen-0">
+  <div class="title-rose">🌹</div>
+  <h1 class="title-h1">Meu bem, será que você<br>um dia vai ser amada?</h1>
+  <p class="title-sub">Espero que isso daqui possa te dar uma dica da resposta!</p>
+  <button class="start-btn" onclick="goTo(1)">Começar ✨</button>
+</div>
+
+<!-- ══════════════════════════════════════
+     TELAS 1, 2, 3 — QUIZ
+═══════════════════════════════════════ -->
+<div class="screen" id="screen-1">
+  <div class="quiz-card">
+    <div class="quiz-eyebrow">Pergunta 1 de 3</div>
+    <h2 class="quiz-question">Que dia você acha que eu fiz algo pra você por amor?</h2>
+    <div class="quiz-options" id="opts-1">
+      <button class="quiz-option" onclick="answer(1, this, true)">Quando eu sai correndo para te entregar a calculadora na prova do zezinho</button>
+      <button class="quiz-option" onclick="answer(1, this, true)">Quando levantei sozinho para te fazer café da manhã</button>
+      <button class="quiz-option" onclick="answer(1, this, true)">Quando fui de noite no aquário te fazer companhia e você e a Thata me humilharam</button>
+      <button class="quiz-option" onclick="answer(1, this, true)">Quando rodei sábado de manhã pela cidade para te dar um chocolate e uma foto da Safira</button>
+    </div>
+    <div class="quiz-feedback" id="fb-1"></div>
+    <button class="next-btn" id="next-1" onclick="goTo(2)">Próxima →</button>
+  </div>
+</div>
+
+<div class="screen" id="screen-2">
+  <div class="quiz-card">
+    <div class="quiz-eyebrow">Pergunta 2 de 3</div>
+    <h2 class="quiz-question">Qual é a melhor parte de quando dormimos juntos?</h2>
+    <div class="quiz-options" id="opts-2">
+      <button class="quiz-option" onclick="answer(2, this, true)">Te abraçar e me sentir seguro por estar com alguém que eu amo</button>
+      <button class="quiz-option" onclick="answer(2, this, true)">Ver os seus lindos olhos quase fechados olhando pros meus, ao mesmo tempo que fico ansioso para saber sobre o que você está pensando</button>
+      <button class="quiz-option" onclick="answer(2, this, true)">Acordar e ouvir você me dando bom dia da forma mais linda e fofa do mundo</button>
+      <button class="quiz-option" onclick="answer(2, this, true)">Inplicar com você, te dando os piores beijos e finalizando com as lambidas mais nojetas que eu consigo dar</button>
+    </div>
+    <div class="quiz-feedback" id="fb-2"></div>
+    <button class="next-btn" id="next-2" onclick="goTo(3)">Próxima →</button>
+  </div>
+</div>
+
+<div class="screen" id="screen-3">
+  <div class="quiz-card">
+    <div class="quiz-eyebrow">Pergunta 3 de 3</div>
+    <h2 class="quiz-question">Qual é a coisa mais bonita que vc faz inconscientemente?</h2>
+    <div class="quiz-options" id="opts-3">
+      <button class="quiz-option" onclick="answer(3, this, true)">O seu carinho e inocencia quando você fala com as pessoas </button>
+      <button class="quiz-option" onclick="answer(3, this, true)">O seu amor por ajudar o próximo e praticar a caridade mesmo que isso vá te atrapalhar</button>
+      <button class="quiz-option" onclick="answer(3, this, true)">A sua constante preocupação por não magoar ninguém, mesmo que isso vá contra os seus pensamentos intrusivos</button>
+      <button class="quiz-option" onclick="answer(3, this, true)">O cuidado em incluir todas as pessoas e não deixar ninguém sozinho</button>
+    </div>
+    <div class="quiz-feedback" id="fb-3"></div>
+    <button class="next-btn" id="next-3" onclick="goTo(4)">Continuar →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     TELA 4 — COMPLETAR A FRASE
+═══════════════════════════════════════ -->
+<div class="screen" id="screen-4">
+  <div class="fill-card">
+    <h2 class="fill-title">Complete a mensagem</h2>
+    <p class="fill-subtitle">Arraste as palavras do banco para os espaços em branco e descubra o que eu quero te dizer.</p>
+
+    <div class="word-bank" id="wordBank">
+      <div class="word-chip" draggable="true" data-word="cilios">cilios</div>
+      <div class="word-chip" draggable="true" data-word="derreta">derreta</div>
+      <div class="word-chip" draggable="true" data-word="traços">traços</div>
+      <div class="word-chip" draggable="true" data-word="especial">especial</div>
+      <div class="word-chip" draggable="true" data-word="você">você</div>
+      <div class="word-chip" draggable="true" data-word="linda">linda</div>
+      <div class="word-chip" draggable="true" data-word="sorriso">sorriso</div>
+      <div class="word-chip" draggable="true" data-word="cachinhos">cachinhos</div>
+    </div>
+
+    <div class="fill-sentence">
+      Jujuba, acho que nunca vou conseguir te dizer o quão <span class="blank" data-answer="especial" id="b1" ondragover="ev.preventDefault()||this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="dropWord(event,this)" onclick="clickBlank(this)">&nbsp;</span>
+      você é para mim. Sou apaixonado por todos os seus 
+      <span class="blank" data-answer="traços" id="b2" ondragover="ev.preventDefault()||this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="dropWord(event,this)" onclick="clickBlank(this)">&nbsp;</span>.
+      Adoro a textura e <span class="blank" data-answer="cachinhos" id="b3" ondragover="ev.preventDefault()||this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="dropWord(event,this)" onclick="clickBlank(this)">&nbsp;</span>
+      do seu cabelo. Acho lindo seus 
+      <span class="blank" data-answer="cilios" id="b4" ondragover="ev.preventDefault()||this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="dropWord(event,this)" onclick="clickBlank(this)">&nbsp;</span>,
+      e o modo como fica os seus olhos quando você esta sorrindo! Seu 
+      <span class="blank" data-answer="sorriso" id="b5" ondragover="ev.preventDefault()||this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="dropWord(event,this)" onclick="clickBlank(this)">&nbsp;</span>
+      é a minha maior fonte de força e alegria dos ultimos dias e não sei como eu teria sobrevivido essas ultimas semanas sem <span class="blank" data-answer="você" id="b6" ondragover="ev.preventDefault()||this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="dropWord(event,this)" onclick="clickBlank(this)">&nbsp;</span> do meu lado.
+      Não me importo em como está o seu corpo hoje, porque não sou SÓ apaixonado por ele, mas principalmente pela
+      <span class="blank" data-answer="linda" id="b7" ondragover="ev.preventDefault()||this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="dropWord(event,this)" onclick="clickBlank(this)">&nbsp;</span>
+      pessoa que você é por dentro! Não existe um único lado seu, seja por dentro ou por fora, que eu não me <span class="blank" data-answer="derreta" id="b8" ondragover="ev.preventDefault()||this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="dropWord(event,this)" onclick="clickBlank(this)">&nbsp;</span> por completo quando vejo.
+    </div>
+
+    <div class="fill-result" id="fillResult">
+      ✨ "Jujuba, acho que nunca vou conseguir te dizer o quão <strong>especial</strong> você é para mim.
+       Sou apaixonado por todos os seus <strong>traços</strong>.
+      Adoro a textura e <strong>cachinhos</strong> do seu cabelo. Acho lindo seus 
+      <strong>cilios</strong> e o modo como fica os seus olhos quando você esta sorrindo!
+      Seu <strong>sorriso</strong> é a minha maior fonte de força e alegria dos ultimos dias e não sei como eu teria sobrevivido essas ultimas semanas sem <strong>você</strong> do meu lado.
+      Não me importo em como está o seu corpo hoje, porque não sou SÓ apaixonado por ele, mas principalmente pela
+      <strong>linda</strong> pessoa que você é por dentro! Não existe um único lado seu, seja por dentro ou por fora, que eu não me <strong>derreta</strong> por completo quando vejo." ✨
+    </div>
+
+    <button class="next-btn" id="next-fill" onclick="goTo(5)" style="display:none;">Próxima etapa →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     TELA 5 — PALAVRAS CRUZADAS
+═══════════════════════════════════════ -->
+<div class="screen" id="screen-5">
+  <div class="cross-card">
+    <h2 class="cross-title">Palavras cruzadas</h2>
+    <p class="cross-subtitle">Preencha com as palavras que descrevem o que sinto por você.</p>
+
+    <div class="cross-grid-wrap">
+      <div class="cross-grid" id="crossGrid"></div>
+    </div>
+
+    <div class="clues-wrap">
+  <div class="clue-group">
+    <h4>Horizontal →</h4>
+    <div class="clue"><span>1.</span> O que o Darth Vader é para o Luke.</div>
+    <div class="clue"><span>3.</span> O dia que demos o nosso primeiro beijo.</div>
+    <div class="clue"><span>4.</span> O cargo que Eric propõe dar a Clara.</div>
+    <div class="clue"><span>5.</span> Lizard Lizard Lizard.</div>
+    <!-- Diva foi movida para horizontal -->
+    <div class="clue"><span>7.</span> A palavra proibida das nossas conversas.</div>
+  </div>
+  <div class="clue-group">
+    <h4>Vertical ↓</h4>
+    <div class="clue"><span>6.</span> Esporte mais sexy do mundo (?)</div>
+    <div class="clue" style="background:var(--rose-pale);padding:0.6rem 0.8rem;border-radius:10px;border:1.5px solid var(--rose-light);margin-top:0.5rem;">
+      <span style="color:var(--rose);font-weight:700;">★</span> As letras em vermelho formam a palavra que define tudo o que sinto por você.
+    </div>
+  </div>
+</div>
+
+    <button class="check-cross-btn" onclick="checkCross()">Verificar respostas ✓</button>
+    <button class="next-btn" id="next-cross" onclick="goTo(6)" style="display:none;margin-top:0.75rem;">Chegar ao final →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     TELA 6 — FINALE
+═══════════════════════════════════════ -->
+<div class="screen finale-screen" id="screen-6">
+  <div id="finaleContent">
+    <div class="finale-text">
+      <h2>Se ainda não ficou claro, acho que vou precisar te dizer diretamente uma coisa.</h2>
+      <p>
+        Eu acordo pensando em você,<br>
+        Eu passou o meu dia pensando em você,<br>
+        Eu durmo pensando em você.
+      </p>
+      <p>
+        Você é a coisa mais preciosa do mundo e<br>
+        poder ouvir a sua risada até que ela fique de porquinho<br>
+        é um dos momentos mais mágicos do meu dia.
+      </p>
+      <p>
+        Acho que não consigo expressar todos os dias, mas <strong>eu te amo muito!!!</strong><br>
+        E quero continuar do seu lado todos os dias<br>
+        para que esse sentimento cresça até não caber mais no meu coração<br>
+        e eu tenha que pegar o seu emprestado para você finalmente<br>
+        sentir o meu amor por você.
+      </p>
+      <p>
+       Te amo, meu bem. Nunca pense que você não pode ser amada,<br>
+       porque esse é o sentimento mais fácil de sentir por você.
+      </p>
+    </div>
+
+    <div class="heart-btn-wrap">
+      <button class="heart-btn" onclick="revealLocket()" aria-label="Abrir declaração">
+        <svg class="heart-svg" viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="hg" cx="50%" cy="40%">
+              <stop offset="0%" stop-color="#E8607A"/>
+              <stop offset="100%" stop-color="#C8445A"/>
+            </radialGradient>
+          </defs>
+          <path d="M100 160 C60 130, 10 100, 10 60 C10 30, 30 10, 55 10 C72 10, 88 20, 100 35 C112 20, 128 10, 145 10 C170 10, 190 30, 190 60 C190 100, 140 130, 100 160Z"
+                fill="url(#hg)"/>
+          <text x="100" y="95" text-anchor="middle" fill="white" font-family="Lato,sans-serif" font-size="11" font-weight="700" letter-spacing="1">TOQUE AQUI</text>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Reveal -->
+  <div class="locket-reveal" id="locketReveal">
+    <div class="locket-gif-wrap">
+      <!-- SUBSTITUA O SRC ABAIXO PELA URL DO SEU GIF OU FOTO -->
+      <img src="https://i.imgur.com/seN3G2m.gif" alt="nossa foto" style="width:100%;height:100%;object-fit:cover;">
+    </div>
+    <p class="locket-msg">
+      "Eu te amo." 🌹
+    </p>
+  </div>
+</div>
+
+<script>
+/* ── STATE ── */
+let currentScreen = 0;
+let draggedWord = null;
+let selectedBlank = null;
+const totalScreens = 7;
+
+/* ── PETALS ── */
+(function spawnPetals() {
+  const wrap = document.getElementById('petals');
+  const items = ['🦎','❤️‍🔥','🌹','💕','⭐'];
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'petal';
+    p.textContent = items[Math.floor(Math.random() * items.length)];
+    p.style.left = Math.random() * 100 + '%';
+    p.style.fontSize = (14 + Math.random() * 12) + 'px';
+    const dur = 8 + Math.random() * 12;
+    const delay = Math.random() * 12;
+    p.style.animation = `fallPetal ${dur}s ${delay}s linear infinite`;
+    wrap.appendChild(p);
+  }
+})();
+
+/* ── NAVIGATION ── */
+function goTo(n) {
+  document.getElementById('screen-' + currentScreen).classList.remove('active');
+  currentScreen = n;
+  document.getElementById('screen-' + n).classList.add('active');
+  window.scrollTo(0, 0);
+  updateProgress();
+}
+function updateProgress() {
+  const pct = (currentScreen / 6) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  const labels = ['','1/6','2/6','3/6','4/6','5/6',''];
+  document.getElementById('stepLabel').textContent = labels[currentScreen] || '';
+}
+
+/* ── QUIZ ── */
+const feedbacks = {
+  1: {
+    ok:  "Tudo isso foi feito por amor e com amor. Não existe nada que eu faça por você que o amor não me motive! 🌹",
+    nok: ""
+  },
+  2: {
+    ok:  "Todos essas coisas fazem dormir com você uma das esperiências mais especiais que eu já tive ❤️‍🔥",
+    nok: ""
+  },
+  3: {
+    ok:  "Acho que uma das coisas que mais me deixa apaixonado por você são todas essas coisas que você faz pelos outros sem perceber. 💕",
+    nok: ""
+  }
+};
+
+function answer(q, btn, isCorrect) {
+  const opts = document.querySelectorAll(`#opts-${q} .quiz-option`);
+  opts.forEach(o => {
+    o.disabled = true;
+    o.style.cursor = 'default';
+    o.classList.add('correct');
+  });
+  const fb = document.getElementById('fb-' + q);
+  fb.textContent = feedbacks[q].ok;
+  fb.className = 'quiz-feedback show ok';
+  const nb = document.getElementById('next-' + q);
+  nb.classList.add('show');
+}
+
+/* ── DRAG & DROP FILL ── */
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.word-chip').forEach(chip => {
+    chip.addEventListener('dragstart', e => {
+      draggedWord = chip;
+      chip.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', chip.dataset.word);
+    });
+    chip.addEventListener('dragend', () => chip.classList.remove('dragging'));
+    // Touch support
+    chip.addEventListener('touchstart', touchStart, { passive: true });
+    chip.addEventListener('touchmove',  touchMove,  { passive: false });
+    chip.addEventListener('touchend',   touchEnd);
+  });
+  document.querySelectorAll('.blank').forEach(blank => {
+    blank.addEventListener('dragover', e => { e.preventDefault(); blank.classList.add('over'); });
+    blank.addEventListener('dragleave', () => blank.classList.remove('over'));
+    blank.addEventListener('drop', e => dropWord(e, blank));
+  });
+  buildCrossword();
+});
+
+function dropWord(e, blank) {
+  e.preventDefault();
+  blank.classList.remove('over');
+  const word = e.dataTransfer ? e.dataTransfer.getData('text/plain') : (draggedWord ? draggedWord.dataset.word : null);
+  if (!word) return;
+  // Return previous word to bank
+  const prev = blank.dataset.filled;
+  if (prev) returnToBank(prev);
+  blank.textContent = word;
+  blank.dataset.filled = word;
+  blank.classList.add('filled');
+  // Remove from bank
+  removeFromBank(word);
+  checkFill();
+}
+
+function clickBlank(blank) {
+  if (selectedBlank === blank) { selectedBlank = null; return; }
+  selectedBlank = blank;
+}
+
+function removeFromBank(word) {
+  document.querySelectorAll('.word-chip').forEach(c => {
+    if (c.dataset.word === word && c.parentElement.id === 'wordBank') c.remove();
+  });
+}
+function returnToBank(word) {
+  const bank = document.getElementById('wordBank');
+  const chip = document.createElement('div');
+  chip.className = 'word-chip'; chip.draggable = true; chip.dataset.word = word;
+  chip.textContent = word;
+  chip.addEventListener('dragstart', e => { draggedWord = chip; chip.classList.add('dragging'); e.dataTransfer.setData('text/plain', word); });
+  chip.addEventListener('dragend', () => chip.classList.remove('dragging'));
+  chip.addEventListener('touchstart', touchStart, { passive: true });
+  chip.addEventListener('touchmove',  touchMove,  { passive: false });
+  chip.addEventListener('touchend',   touchEnd);
+  bank.appendChild(chip);
+}
+
+function checkFill() {
+  const blanks = document.querySelectorAll('.blank');
+  let allDone = true;
+  blanks.forEach(b => { if (!b.dataset.filled) allDone = false; });
+  if (allDone) {
+    document.getElementById('fillResult').classList.add('show');
+    document.getElementById('next-fill').style.display = 'block';
+    document.getElementById('next-fill').classList.add('show');
+  }
+}
+
+/* Touch drag */
+let touchChip = null, touchClone = null;
+function touchStart(e) {
+  touchChip = e.currentTarget;
+  const rect = touchChip.getBoundingClientRect();
+  touchClone = touchChip.cloneNode(true);
+  touchClone.style.cssText = `position:fixed;opacity:0.85;pointer-events:none;z-index:9999;
+    width:${rect.width}px;height:${rect.height}px;
+    left:${rect.left}px;top:${rect.top}px;transition:none;`;
+  document.body.appendChild(touchClone);
+}
+function touchMove(e) {
+  e.preventDefault();
+  const t = e.touches[0];
+  if (touchClone) { touchClone.style.left = (t.clientX - 40) + 'px'; touchClone.style.top = (t.clientY - 20) + 'px'; }
+}
+function touchEnd(e) {
+  if (touchClone) { document.body.removeChild(touchClone); touchClone = null; }
+  if (!touchChip) return;
+  const t = e.changedTouches[0];
+  const el = document.elementFromPoint(t.clientX, t.clientY);
+  const blank = el ? el.closest('.blank') : null;
+  if (blank) {
+    const word = touchChip.dataset.word;
+    const prev = blank.dataset.filled;
+    if (prev) returnToBank(prev);
+    blank.textContent = word;
+    blank.dataset.filled = word;
+    blank.classList.add('filled');
+    if (touchChip.parentElement.id === 'wordBank') touchChip.remove();
+    checkFill();
+  }
+  touchChip = null;
+}
+
+/* ── CROSSWORD ── */
+// Ajustado para 11 colunas
+const GRID_ROWS = 9, GRID_COLS = 11;
+const answers = {};
+
+// Horizontais
+"PAI".split('').forEach((l,i)    => { if(!answers[0])answers[0]={}; answers[0][3+i]=l; });
+"TOM".split('').forEach((l,i)    => { if(!answers[1])answers[1]={}; answers[1][2+i]=l; });
+"DOZE".split('').forEach((l,i)   => { if(!answers[2])answers[2]={}; answers[2][3+i]=l; });
+"RAINHA".split('').forEach((l,i) => { if(!answers[3])answers[3]={}; answers[3][4+i]=l; });
+"DIVA".split('').forEach((l,i)   => { if(!answers[8])answers[8]={}; answers[8][7+i]=l; }); // Agora DIVA está na horizontal na base de HOQUEI
+
+// Verticais
+"HOQUEI".split('').forEach((l,i) => { if(!answers[3+i])answers[3+i]={}; answers[3+i][8]=l; });
+
+// Coluna 4, linhas 0-3 = AMOR (vertical secreta)
+const amorCol = 4;
+const amorRows = [0, 1, 2, 3];
+
+// Corrigindo: números no início real de cada palavra
+const clueNums = {
+  '0,3': 1,   // PAI (h)
+  '1,2': 5,   // TOM (h)
+  '2,3': 3,   // DOZE (h)
+  '3,4': 4,   // RAINHA (h) 
+  '3,8': 6,   // HOQUEI (v) começa aqui — H de RAINHA
+  '8,7': 7,   // DIVA (h) começa aqui cruzando no I de HOQUEI
+};
+
+function buildCrossword() {
+  const grid = document.getElementById('crossGrid');
+  grid.style.gridTemplateColumns = `repeat(${GRID_COLS}, 36px)`;
+  for (let r = 0; r < GRID_ROWS; r++) {
+    for (let c = 0; c < GRID_COLS; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      const letter = answers[r] && answers[r][c];
+      if (letter) {
+        cell.classList.add('letter');
+        cell.dataset.answer = letter;
+        cell.dataset.row = r;
+        cell.dataset.col = c;
+
+        // Destaque rosa para letras do AMOR vertical secreto
+        const isAmorCell = (c === amorCol && amorRows.includes(r));
+        if (isAmorCell) {
+          cell.style.background = 'var(--rose-pale)';
+          cell.style.border = '2px solid var(--rose)';
+        }
+
+        // Número de pista
+        const key = `${r},${c}`;
+        if (clueNums[key]) {
+          const n = document.createElement('div');
+          n.className = 'cell-num';
+          n.textContent = clueNums[key];
+          cell.appendChild(n);
+        }
+
+        const input = document.createElement('input');
+        input.maxLength = 1;
+        input.type = 'text';
+        input.setAttribute('autocomplete', 'off');
+        if (isAmorCell) input.style.color = 'var(--rose)';
+
+        input.addEventListener('input', e => {
+          // 1. Limpa e formata a letra para maiúscula
+          e.target.value = e.target.value.toUpperCase().replace(/[^A-ZÁÉÍÓÚÃÕÂÊÎÔÛÇ]/, '');
+          
+          // 2. Se a pessoa digitou uma letra (campo não está vazio), pula para o próximo
+          if (e.target.value !== '') {
+            const next = findNextCell(r, c);
+            if (next) { 
+              next.focus(); 
+              next.select(); 
+            }
+          }
+        });
+        
+        input.addEventListener('keydown', e => {
+          // Se apertar Backspace num campo que já está vazio, ele volta pro anterior
+          if (e.key === 'Backspace' && !e.target.value) {
+            const prev = findPrevCell(r, c);
+            if (prev) { 
+              prev.focus(); 
+              prev.select(); 
+            }
+          }
+        });
+        cell.appendChild(input);
+      } else {
+        cell.classList.add('empty');
+      }
+      grid.appendChild(cell);
+    }
+  }
+}
+
+function findNextCell(r, c) {
+  // scan row then col
+  for (let cc = c+1; cc < GRID_COLS; cc++) {
+    if (answers[r] && answers[r][cc]) return getInput(r, cc);
+  }
+  for (let rr = r+1; rr < GRID_ROWS; rr++) {
+    for (let cc = 0; cc < GRID_COLS; cc++) {
+      if (answers[rr] && answers[rr][cc]) return getInput(rr, cc);
+    }
+  }
+  return null;
+}
+function findPrevCell(r, c) {
+  for (let cc = c-1; cc >= 0; cc--) {
+    if (answers[r] && answers[r][cc]) return getInput(r, cc);
+  }
+  return null;
+}
+function getInput(r, c) {
+  const cells = document.querySelectorAll(`#crossGrid .cell.letter`);
+  for (const cell of cells) {
+    if (parseInt(cell.dataset.row)===r && parseInt(cell.dataset.col)===c) return cell.querySelector('input');
+  }
+  return null;
+}
+
+function checkCross() {
+  const cells = document.querySelectorAll('#crossGrid .cell.letter');
+  let allCorrect = true;
+  cells.forEach(cell => {
+    const input = cell.querySelector('input');
+    const val = (input.value || '').toUpperCase();
+    const ans = cell.dataset.answer;
+    if (val === ans) {
+      cell.classList.add('correct');
+      const r = parseInt(cell.dataset.row), c = parseInt(cell.dataset.col);
+      if (c === amorCol && amorRows.includes(r)) {
+        cell.style.background = '#FFDDDD';
+        cell.style.border = '2px solid var(--rose)';
+        input.style.color = 'var(--rose-dark)';
+        input.style.fontWeight = '900';
+      }
+    } else {
+      cell.classList.remove('correct');
+      allCorrect = false;
+    }
+  });
+  if (allCorrect) {
+    if (!document.getElementById('cross-success-msg')) {
+    const msg = document.createElement('div');
+    msg.id = 'cross-success-msg';
+    msg.style.cssText = 'margin-top:0.75rem;padding:0.8rem 1rem;border-radius:12px;background:var(--gold-light);border:1px solid var(--gold);color:var(--ink);font-family:Playfair Display,serif;font-style:italic;font-size:1rem;';
+    msg.innerHTML = '✨ Você descobriu! A palavra secreta é <strong style="color:var(--rose);font-size:1.2em;letter-spacing:0.1em;">AMOR</strong> — exatamente o que sinto por você. 💕';
+    document.querySelector('.check-cross-btn').after(msg);
+  }
+    const nb = document.getElementById('next-cross');
+    nb.style.display = 'block'; nb.classList.add('show');
+    spawnConfetti(30);
+  } else {
+    alert('Quase lá… alguma resposta ainda não está certa. Continue tentando! 🌹');
+  }
+}
+
+/* ── FINALE ── */
+function revealLocket() {
+  document.getElementById('finaleContent').style.display = 'none';
+  const reveal = document.getElementById('locketReveal');
+  reveal.classList.add('show');
+  spawnConfetti(80);
+}
+
+/* ── CONFETTI ── */
+function spawnConfetti(n) {
+  const colors = ['#C8445A','#F7B3C0','#C9A84C','#FFE0A3','#A0D8B3','#7BBDFA'];
+  for (let i = 0; i < n; i++) {
+    setTimeout(() => {
+      const c = document.createElement('div');
+      c.className = 'confetti-piece';
+      c.style.left = Math.random() * 100 + 'vw';
+      c.style.background = colors[Math.floor(Math.random() * colors.length)];
+      c.style.width = (6 + Math.random() * 8) + 'px';
+      c.style.height = (6 + Math.random() * 8) + 'px';
+      c.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      const dur = 2.5 + Math.random() * 2;
+      c.style.animation = `confettiFall ${dur}s ease-out forwards`;
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), dur * 1000);
+    }, Math.random() * 600);
+  }
+}
+</script>
+</body>
+</html>
