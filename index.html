@@ -156,6 +156,17 @@
     margin: 0 4px; vertical-align: middle; transition: all 0.2s;
     min-height: 32px; position: relative;
   }
+  @keyframes shakeError {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-5px); }
+    40%, 80% { transform: translateX(5px); }
+  }
+  .blank.error {
+    animation: shakeError 0.4s ease;
+    background: #FDF0F0 !important;
+    border-color: #C84444 !important;
+    color: #C84444 !important;
+  }
   .blank.filled { background: var(--rose-light); }
   .blank.over   { background: var(--rose-light); border-color: var(--gold); }
 
@@ -635,15 +646,24 @@ function dropWord(e, blank) {
   blank.classList.remove('over');
   const word = e.dataTransfer ? e.dataTransfer.getData('text/plain') : (draggedWord ? draggedWord.dataset.word : null);
   if (!word) return;
-  // Return previous word to bank
-  const prev = blank.dataset.filled;
-  if (prev) returnToBank(prev);
-  blank.textContent = word;
-  blank.dataset.filled = word;
-  blank.classList.add('filled');
-  // Remove from bank
-  removeFromBank(word);
-  checkFill();
+  
+  // Verifica se a palavra solta é a resposta correta para este espaço
+  if (word === blank.dataset.answer) {
+    blank.textContent = word;
+    blank.dataset.filled = word;
+    blank.classList.add('filled');
+    blank.style.pointerEvents = 'none'; // Trava o espaço para não mexer mais
+    removeFromBank(word);
+    checkFill();
+  } else {
+    // Adiciona a classe que faz a tremidinha e fica vermelho
+    blank.classList.add('error');
+    
+    // Remove a classe depois de 400ms (tempo da animação) para poder errar de novo
+    setTimeout(() => {
+      blank.classList.remove('error');
+    }, 400);
+  }
 }
 
 function clickBlank(blank) {
@@ -718,15 +738,27 @@ function touchEnd(e) {
   const t = e.changedTouches[0];
   const el = document.elementFromPoint(t.clientX, t.clientY);
   const blank = el ? el.closest('.blank') : null;
+  
   if (blank) {
     const word = touchChip.dataset.word;
-    const prev = blank.dataset.filled;
-    if (prev) returnToBank(prev);
-    blank.textContent = word;
-    blank.dataset.filled = word;
-    blank.classList.add('filled');
-    if (touchChip.parentElement.id === 'wordBank') touchChip.remove();
-    checkFill();
+    
+    // Verifica se a palavra solta é a resposta correta no celular
+    if (word === blank.dataset.answer) {
+      blank.textContent = word;
+      blank.dataset.filled = word;
+      blank.classList.add('filled');
+      blank.style.pointerEvents = 'none'; // Trava o espaço
+      if (touchChip.parentElement.id === 'wordBank') touchChip.remove();
+      checkFill();
+    } else {
+      // Adiciona a classe que faz a tremidinha e fica vermelho
+      blank.classList.add('error');
+      
+      // Remove a classe depois de 400ms
+      setTimeout(() => {
+        blank.classList.remove('error');
+      }, 400);
+    }
   }
   touchChip = null;
 }
