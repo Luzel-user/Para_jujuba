@@ -890,34 +890,50 @@ function getInput(r, c) {
 function checkCross() {
   const cells = document.querySelectorAll('#crossGrid .cell.letter');
   let allCorrect = true;
+  
   cells.forEach(cell => {
     const input = cell.querySelector('input');
     const val = (input.value || '').toUpperCase();
     const ans = cell.dataset.answer;
+    
     if (val === ans) {
       cell.classList.add('correct');
       const r = parseInt(cell.dataset.row), c = parseInt(cell.dataset.col);
+      
+      // Se for uma das letras da palavra AMOR, forçamos o vermelho por cima do verde
       if (c === amorCol && amorRows.includes(r)) {
-        cell.style.background = '#FFDDDD';
-        cell.style.border = '2px solid var(--rose)';
-        input.style.color = 'var(--rose-dark)';
-        input.style.fontWeight = '900';
+        cell.style.setProperty('background', '#FFDDDD', 'important');
+        cell.style.setProperty('border-color', 'var(--rose)', 'important');
+        input.style.setProperty('color', 'var(--rose-dark)', 'important');
+        input.style.setProperty('font-weight', '900', 'important');
       }
     } else {
       cell.classList.remove('correct');
+      
+      // Se a pessoa errar depois de ter acertado, removemos as cores forçadas para resetar
+      const r = parseInt(cell.dataset.row), c = parseInt(cell.dataset.col);
+      if (c === amorCol && amorRows.includes(r)) {
+        cell.style.removeProperty('background');
+        cell.style.removeProperty('border-color');
+        input.style.removeProperty('color');
+        input.style.removeProperty('font-weight');
+      }
+      
       allCorrect = false;
     }
   });
+  
   if (allCorrect) {
     if (!document.getElementById('cross-success-msg')) {
-    const msg = document.createElement('div');
-    msg.id = 'cross-success-msg';
-    msg.style.cssText = 'margin-top:0.75rem;padding:0.8rem 1rem;border-radius:12px;background:var(--gold-light);border:1px solid var(--gold);color:var(--ink);font-family:Playfair Display,serif;font-style:italic;font-size:1rem;';
-    msg.innerHTML = '✨ Você descobriu! A palavra secreta é <strong style="color:var(--rose);font-size:1.2em;letter-spacing:0.1em;">AMOR</strong> — exatamente o que sinto por você. 💕';
-    document.querySelector('.check-cross-btn').after(msg);
-  }
+      const msg = document.createElement('div');
+      msg.id = 'cross-success-msg';
+      msg.style.cssText = 'margin-top:0.75rem;padding:0.8rem 1rem;border-radius:12px;background:var(--gold-light);border:1px solid var(--gold);color:var(--ink);font-family:Playfair Display,serif;font-style:italic;font-size:1rem;';
+      msg.innerHTML = '✨ Você descobriu! A palavra secreta é <strong style="color:var(--rose);font-size:1.2em;letter-spacing:0.1em;">AMOR</strong> — exatamente o que sinto por você. 💕';
+      document.querySelector('.check-cross-btn').after(msg);
+    }
     const nb = document.getElementById('next-cross');
-    nb.style.display = 'block'; nb.classList.add('show');
+    nb.style.display = 'block'; 
+    nb.classList.add('show');
     spawnConfetti(30);
   } else {
     alert('Quase lá… alguma resposta ainda não está certa. Continue tentando! 🌹');
